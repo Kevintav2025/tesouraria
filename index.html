@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { 
+      font-family: sans-serif; 
+      display: flex; 
+      flex-direction: column; 
+      align-items: center; 
+      justify-content: center;
+      margin: 0;
+      min-height: 100vh;
+      background-color: #050a0f; /* Fundo bem escuro */
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* CAMADA DO CLARÃO DO RELÂMPAGO */
+    .flash {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: white;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    @keyframes flash-anim {
+      0% { opacity: 0; }
+      10% { opacity: 0.4; }
+      20% { opacity: 0; }
+      25% { opacity: 0.6; }
+      40% { opacity: 0; }
+    }
+
+    /* ESTILO DA GOTA DE CHUVA */
+    .gota {
+      position: absolute;
+      background-color: rgba(255, 255, 255, 0.4);
+      width: 1px;
+      height: 20px;
+      pointer-events: none;
+      z-index: 2;
+      animation: cair linear infinite;
+    }
+
+    @keyframes cair {
+      to {
+        transform: translateY(110vh) translateX(20px);
+      }
+    }
+
+    .caixa { 
+      background: rgba(255, 255, 255, 0.95); 
+      padding: 25px; 
+      border-radius: 15px; 
+      box-shadow: 0 10px 30px rgba(0,0,0,0.6); 
+      width: 90%; 
+      max-width: 320px; 
+      border-top: 8px solid #0091da; 
+      z-index: 10; 
+      position: relative;
+    }
+
+    h2 { color: #004b8d; text-align: center; margin-top: 0; }
+    label { font-weight: bold; display: block; margin-top: 15px; color: #444; }
+    input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; font-size: 16px; }
+    
+    button { 
+      width: 100%; padding: 15px; background-color: #0091da; color: white; 
+      border: none; border-radius: 30px; font-size: 18px; font-weight: bold; 
+      cursor: pointer; margin-top: 15px; 
+    }
+
+    #status { display:none; color:#0091da; text-align:center; font-weight:bold; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <div class="flash" id="flashLayer"></div>
+
+  <div class="caixa">
+    <h2>Lançamento de Oferta</h2>
+    
+    <label>Data do Culto:</label>
+    <input type="date" id="dataInput">
+
+    <label>Valor (R$):</label>
+    <input type="text" id="valor" placeholder="0,00" inputmode="decimal">
+    
+    <button onclick="enviar()">Salvar na Planilha</button>
+    <p id="status">✅ Enviado com Sucesso!</p>
+  </div>
+
+  <script>
+    document.getElementById('dataInput').valueAsDate = new Date();
+
+    // FUNÇÃO QUE CRIA A CHUVA
+    function criarChuva() {
+      for (let i = 0; i < 5; i++) { // Cria 5 gotas por vez
+        const gota = document.createElement('div');
+        gota.classList.add('gota');
+        gota.style.left = Math.random() * 110 + 'vw';
+        gota.style.top = '-20px';
+        gota.style.opacity = Math.random();
+        gota.style.animationDuration = Math.random() * 0.5 + 0.5 + 's';
+        document.body.appendChild(gota);
+        
+        setTimeout(() => gota.remove(), 1000);
+      }
+    }
+    setInterval(criarChuva, 50); // Velocidade da chuva
+
+    // FUNÇÃO DO RELÂMPAGO ALEATÓRIO
+    function dispararRelampago() {
+      const flash = document.getElementById('flashLayer');
+      const tempo = Math.random() * 5000 + 3000;
+      
+      setTimeout(() => {
+        flash.style.animation = 'flash-anim 0.6s ease-out';
+        setTimeout(() => flash.style.animation = '', 600);
+        dispararRelampago();
+      }, tempo);
+    }
+    dispararRelampago();
+
+    function enviar() {
+      var d = document.getElementById("dataInput").value;
+      var v = document.getElementById("valor").value;
+      if(!d || !v) return alert("Preencha tudo!");
+
+      google.script.run.withSuccessHandler(function() {
+        document.getElementById("status").style.display = "block";
+        document.getElementById("valor").value = "";
+        setTimeout(() => document.getElementById("status").style.display = "none", 3000);
+      }).salvarOferta({dataInput: d, valor: v});
+    }
+  </script>
+</body>
+</html>
